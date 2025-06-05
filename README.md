@@ -27,6 +27,7 @@
 
 ## Project setup
 
+Create a .env file based on .env-example and fill it with the required attributes
 ```bash
 $ npm install
 ```

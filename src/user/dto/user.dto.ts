@@ -1,7 +1,9 @@
 export class UserDto {
-  firstName: string;
+  id: number;
 
-  lastName: string;
+  login: string;
+
+  password: string;
 
   isActive: boolean;
 }

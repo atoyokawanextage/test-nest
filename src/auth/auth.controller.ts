@@ -17,6 +17,8 @@ export class AuthController {
   create(@Body() loginAuthDto: LoginAuthDto) {
     return this.authService.login(loginAuthDto);
   }
+
+  // test call to other apis
   @Get('cat')
   async getCatFactAsync(): Promise<CatFactDto> {
     const response: AxiosResponse = await firstValueFrom(

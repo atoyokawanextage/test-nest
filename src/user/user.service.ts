@@ -3,6 +3,8 @@ import { UserDto } from './dto/user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
+import { userMapper } from './mappers/user-mapper';
+import { LoginAuthDto } from 'src/auth/dto/login-auth.dto';
 
 @Injectable()
 export class UserService {
@@ -17,22 +19,27 @@ export class UserService {
     return allUsers;
   }
 
-  async findOne(id: number) {
+  async findById(id: number) {
     const firstUser = await this.userRepository.findOneBy({
       id,
     });
     return firstUser;
   }
 
+  async findByAuth(loginAuthDto: LoginAuthDto) {
+    const firstUser = await this.userRepository.findOneBy({
+      login: loginAuthDto.login,
+      password: loginAuthDto.password,
+    });
+    return firstUser;
+  }
+
   async create(userDto: UserDto) {
-    const user = new User();
-    user.firstName = userDto.firstName;
-    user.lastName = userDto.lastName;
-    user.isActive = userDto.isActive;
+    const user = userMapper.toEntity(userDto);
 
     const userResponse = await this.userRepository.save(user);
 
-    return userResponse;
+    return userMapper.toDto(userResponse);
   }
 
   async createMany(usersDto: UserDto[]) {
@@ -42,14 +49,11 @@ export class UserService {
     await queryRunner.startTransaction();
     const response: User[] = [];
     try {
-      for (const user of usersDto) {
-        const newUser = new User();
-        newUser.firstName = user.firstName;
-        newUser.lastName = user.lastName;
-        newUser.isActive = user.isActive;
+      for (const userDto of usersDto) {
+        const newUser = userMapper.toEntity(userDto);
 
         const userResponse = await queryRunner.manager.save(newUser);
-        response.push(userResponse);
+        response.push(userMapper.toDto(userResponse));
       }
 
       await queryRunner.commitTransaction();
@@ -63,15 +67,13 @@ export class UserService {
   }
 
   async update(id: number, userDto: UserDto) {
-    const user = await this.userRepository.findOneBy({
+    let user = await this.userRepository.findOneBy({
       id,
     });
     if (!user) {
       return;
     }
-    user.firstName = userDto.firstName;
-    user.lastName = userDto.lastName;
-    user.isActive = userDto.isActive;
+    user = { ...user, ...userDto };
 
     const userResponse = await this.userRepository.save(user);
     return userResponse;
